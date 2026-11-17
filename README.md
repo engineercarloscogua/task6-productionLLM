@@ -1,2 +1,5 @@
 # task6-productionLLM
-Actividad 6 de la asignatura de LLM de la maestría de Inteligencia artificial de la Universidad de la salle
+
+¡Hola! Bienvenido a mi repositorio.
+
+Actividad 6 de la asignatura de LLM de la Maestría en Inteligencia Artificial de la Universidad de La Salle.
