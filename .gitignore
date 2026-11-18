@@ -50,6 +50,7 @@ coverage.xml
 *.lcov
 .hypothesis/
 .pytest_cache/
+.pytest-tmp/
 cover/
 
 # Translations
@@ -153,6 +154,9 @@ activemq-data/
 .env
 .envrc
 .venv
+.venv-broken/
+.uv-cache/
+.uv-python/
 env/
 venv/
 ENV/
@@ -221,6 +225,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Resultados reales generados con una clave local
+/results/
+/data/pdf_originals/
 
 # Archivos de trabajo locales
 /Insumos/
