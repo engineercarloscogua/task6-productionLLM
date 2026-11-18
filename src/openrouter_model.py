@@ -80,7 +80,7 @@ class OpenRouterChatModel(BaseChatModel):
             "Authorization": f"Bearer {self.api_key.get_secret_value()}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/carloscogua/task6-productionLLM",
-            "X-Title": "Asistente universitario Actividad 6",
+            "X-Title": "Asistente de Fomento Socioeconomico UNITROPICO",
         }
         for attempt in range(self.max_retries + 1):
             response = requests.post(

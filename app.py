@@ -5,15 +5,134 @@ from uuid import uuid4
 
 import streamlit as st
 
-from src.models import ModelOption, fetch_free_tool_models
+from src.models import ModelOption, default_model_index, fetch_free_tool_models
 from src.agent import AgentResponse, build_agent, run_agent
 from src.pdf_knowledge import PDF_DIRECTORY, pdf_knowledge_store
 
 
 st.set_page_config(
-    page_title="Asistente universitario con LLM",
-    page_icon="🎓",
+    page_title="Asistente de Fomento Socioeconómico | UNITRÓPICO",
+    page_icon="🌿",
     layout="wide",
+)
+
+st.markdown(
+    """
+    <style>
+    :root {
+        --unitropico-navy: #12324a;
+        --unitropico-green: #16745b;
+        --unitropico-mint: #e7f5ee;
+        --unitropico-gold: #d9a441;
+        --unitropico-ink: #18302a;
+    }
+
+    [data-testid="stAppViewContainer"] {
+        background:
+            radial-gradient(circle at 92% 4%, rgba(217, 164, 65, 0.14), transparent 24rem),
+            linear-gradient(180deg, #f7fbf9 0%, #eef6f2 100%);
+    }
+
+    [data-testid="stHeader"] {
+        background: transparent;
+    }
+
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f3faf6 0%, #e7f2ed 100%);
+        border-right: 1px solid rgba(22, 116, 91, 0.14);
+    }
+
+    .block-container {
+        max-width: 1120px;
+        padding-top: 2rem;
+        padding-bottom: 4rem;
+    }
+
+    .unitropico-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 2.2rem 2.4rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 24px;
+        color: white;
+        background: linear-gradient(125deg, #12324a 0%, #17634f 68%, #27806a 100%);
+        box-shadow: 0 18px 45px rgba(18, 50, 74, 0.18);
+    }
+
+    .unitropico-hero::after {
+        content: "";
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        right: -90px;
+        top: -120px;
+        border: 42px solid rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+    }
+
+    .unitropico-eyebrow {
+        margin: 0 0 0.55rem;
+        color: #d9f2e5;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    .unitropico-hero h1 {
+        max-width: 820px;
+        margin: 0;
+        color: white;
+        font-size: clamp(2rem, 4vw, 3.15rem);
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+    }
+
+    .unitropico-hero p:last-child {
+        max-width: 850px;
+        margin: 1rem 0 0;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+
+    [data-testid="stChatMessage"] {
+        padding: 1.05rem 1.2rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid rgba(22, 116, 91, 0.12);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 8px 24px rgba(18, 50, 74, 0.06);
+    }
+
+    [data-testid="stChatInput"] {
+        border: 1px solid rgba(22, 116, 91, 0.22);
+        border-radius: 18px;
+        box-shadow: 0 12px 32px rgba(18, 50, 74, 0.10);
+    }
+
+    .stButton > button {
+        min-height: 2.75rem;
+        border-color: rgba(22, 116, 91, 0.24);
+        border-radius: 14px;
+        font-weight: 650;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .stButton > button:hover {
+        border-color: var(--unitropico-green);
+        color: var(--unitropico-green);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(22, 116, 91, 0.12);
+    }
+
+    div[data-testid="stMetric"], div[data-testid="stExpander"] {
+        border-radius: 14px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 
@@ -60,11 +179,23 @@ def model_label(option: ModelOption) -> str:
 
 initialize_session()
 
-st.title("Asistente documental universitario")
-st.caption("Actividad académica sobre agentes, herramientas, RAG y memoria con LangChain")
+st.markdown(
+    """
+    <section class="unitropico-hero">
+        <p class="unitropico-eyebrow">Bienestar Universitario · UNITRÓPICO</p>
+        <h1>Asistente de Fomento Socioeconómico UNITRÓPICO</h1>
+        <p>
+            Este es tu agente conversacional, al cual puedes preguntar dudas sobre los
+            programas de fomento socioeconómico, como Bienestar Contigo y Renta Joven,
+            además de las dudas que tengas acerca de la Política de Bienestar Universitario.
+        </p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
 st.info(
-    "Las respuestas se generan a partir de los documentos PDF cargados en el "
-    "proyecto. Verifica siempre la información importante en el archivo original."
+    "Las respuestas se apoyan en los documentos institucionales cargados. "
+    "Verifica siempre la información importante en el archivo original citado."
 )
 
 with st.sidebar:
@@ -95,10 +226,13 @@ with st.sidebar:
     selected = st.selectbox(
         "Modelo gratuito con herramientas",
         options=model_options,
+        index=default_model_index(model_options),
         format_func=model_label,
+        key="model_selector",
         help=(
             "La lista se obtiene de OpenRouter y se filtra por precio gratuito, "
-            "salida de texto y soporte para tools."
+            "salida de texto y soporte para herramientas. Nemotron 3.5 Lightning "
+            "se selecciona por defecto cuando está disponible."
         ),
     )
     st.caption(f"ID: `{selected.id}`")
@@ -149,9 +283,9 @@ if st.session_state.active_model != selected.id:
 suggested_prompt = None
 if pdf_status.files and pdf_status.chunks:
     suggestions = [
-        "¿Cuál es el tema principal de los documentos?",
-        "¿Qué requisitos se mencionan?",
-        "¿Qué fechas o plazos importantes aparecen?",
+        "¿Cuáles son los requisitos para acceder a Renta Joven?",
+        "¿Qué apoyos ofrece el programa Bienestar Contigo?",
+        "Resume los principios de la Política de Bienestar Universitario.",
     ]
     st.subheader("Preguntas sugeridas")
     columns = st.columns(len(suggestions))
@@ -165,7 +299,8 @@ else:
     )
 
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
+    avatar = "🌿" if message["role"] == "assistant" else "👤"
+    with st.chat_message(message["role"], avatar=avatar):
         st.markdown(message["content"])
         if message.get("metadata"):
             metadata = message["metadata"]
@@ -176,7 +311,7 @@ for message in st.session_state.messages:
             )
 
 typed_prompt = st.chat_input(
-    "Escribe una pregunta sobre los documentos cargados",
+    "Pregunta sobre Renta Joven, Bienestar Contigo o la Política de Bienestar…",
     disabled=not bool(api_key),
 )
 prompt = suggested_prompt or typed_prompt
@@ -189,10 +324,10 @@ if not api_key:
 
 if prompt and api_key:
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="🌿"):
         with st.spinner(f"Consultando {selected.name}…"):
             try:
                 if st.session_state.agent is None:

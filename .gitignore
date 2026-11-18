@@ -225,6 +225,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.streamlit/credentials.toml
+.streamlit/cache/
+/streamlit.stdout.log
+/streamlit.stderr.log
+
+# Archivos locales del sistema y del editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
 
 # Resultados reales generados con una clave local
 /results/

@@ -1,4 +1,9 @@
-from src.models import ModelOption, parse_free_tool_models
+from src.models import (
+    DEFAULT_MODEL_ID,
+    ModelOption,
+    default_model_index,
+    parse_free_tool_models,
+)
 
 
 def test_catalog_keeps_only_free_text_tool_models() -> None:
@@ -32,3 +37,16 @@ def test_catalog_keeps_only_free_text_tool_models() -> None:
         ModelOption.free_router(),
         ModelOption("example/good:free", "Good model", 128000),
     ]
+
+
+def test_nemotron_is_selected_by_default_when_available() -> None:
+    options = [
+        ModelOption.free_router(),
+        ModelOption(DEFAULT_MODEL_ID, "Nemotron 3.5 Lightning", 1_000_000),
+    ]
+
+    assert default_model_index(options) == 1
+
+
+def test_default_model_falls_back_to_first_catalog_option() -> None:
+    assert default_model_index([ModelOption.free_router()]) == 0

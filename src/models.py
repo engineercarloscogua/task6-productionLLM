@@ -9,6 +9,7 @@ import requests
 
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 REQUEST_TIMEOUT_SECONDS = 15
+DEFAULT_MODEL_ID = "nvidia/nemotron-3.5-lightning:free"
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,3 +68,11 @@ def fetch_free_tool_models() -> list[ModelOption]:
     )
     response.raise_for_status()
     return parse_free_tool_models(response.json())
+
+
+def default_model_index(options: list[ModelOption]) -> int:
+    """Return the preferred model position, with a safe catalog fallback."""
+    return next(
+        (index for index, option in enumerate(options) if option.id == DEFAULT_MODEL_ID),
+        0,
+    )
