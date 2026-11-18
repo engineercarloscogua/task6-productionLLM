@@ -70,7 +70,8 @@ aplica límites de solicitudes y su disponibilidad puede cambiar.
 6. En la barra lateral, confirma que aparezcan los archivos y pulsa **Recargar
    documentos** después de cualquier cambio.
 
-7. Con una clave válida y autorización para consumir la API, ejecuta el benchmark:
+7. Con una clave válida y autorización para consumir la API, ejecuta la prueba de
+   rendimiento con diferentes cargas de trabajo:
 
    ```powershell
    $env:OPENROUTER_API_KEY = "tu_clave"
@@ -78,7 +79,29 @@ aplica límites de solicitudes y su disponibilidad puede cambiar.
    ```
 
    El script escribe las muestras y el resumen en `results/`, una carpeta ignorada
-   por Git. Copia únicamente resultados revisados al notebook de entrega.
+   por Git. Copia únicamente resultados revisados al notebook de entrega. Los
+   niveles 1, 2 y 5 son una metodología del equipo, no valores impuestos por la
+   rúbrica.
+
+## Despliegue en Streamlit Community Cloud
+
+1. Selecciona el repositorio `engineercarloscogua/task6-productionLLM`, la rama
+   `main` y el archivo principal `app.py`.
+2. En **Advanced settings**, elige Python 3.12 para reproducir el entorno usado
+   durante las pruebas.
+3. Agrega el secreto sin comillas adicionales:
+
+   ```toml
+   OPENROUTER_API_KEY = "tu_clave_de_openrouter"
+   ```
+
+4. Despliega o reinicia la aplicación y revisa los logs de instalación. Community
+   Cloud debe detectar `requirements.txt` como la única fuente de dependencias.
+5. Verifica la aplicación desde una ventana privada y confirma que el catálogo de
+   modelos, los PDF y una consulta documental funcionen correctamente.
+
+Si una aplicación ya fue creada con otra versión de Python, Community Cloud exige
+eliminarla y volverla a desplegar para cambiar esa versión.
 
 ## Alcance de los datos
 
@@ -101,15 +124,14 @@ src/pdf_knowledge.py       Extracción, fragmentación y recarga de PDF
 src/models.py              Catálogo de modelos gratuitos de OpenRouter
 src/tools.py               Herramientas del agente
 data/pdfs/                 Carpeta donde se cargan los documentos del RAG
-scripts/benchmark.py       Carga controlada y métricas p50/p95
+scripts/benchmark.py       Prueba controlada con diferentes cargas de trabajo
 docs/                      Resultados, limitaciones y reflexión ética
-notebooks/                 Notebook académico reproducible de entrega
+notebooks/Actividad6_Entrega_Colab.ipynb  Notebook reproducible de entrega
 tests/                     Pruebas deterministas sin consumo de API
 ```
 
 ## Estado del despliegue
 
-La aplicación está validada localmente. El benchmark contra OpenRouter y el
-despliegue público permanecen marcados como **NO MEDIDOS / NO REALIZADOS** hasta
-contar con una clave válida y autorización explícita para consumir la API y
-publicar el repositorio.
+La aplicación y sus dependencias están validadas localmente en un entorno limpio
+con Python 3.12. El despliegue público y la prueba de cargas deben registrarse en
+el notebook cuando se verifiquen desde Streamlit Community Cloud.
