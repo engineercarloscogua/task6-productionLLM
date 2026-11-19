@@ -349,24 +349,31 @@ if prompt and api_key:
             else:
                 st.markdown(response.text)
                 tools_text = ", ".join(response.tools) or "ninguna"
-                st.caption(
-                    f"Modelo: {response.model_id} · Herramientas: {tools_text} · "
-                    f"Latencia: {response.latency_seconds:.2f} s"
-                )
+                if response.model_invoked:
+                    st.caption(
+                        f"Modelo: {response.model_id} · Herramientas: {tools_text} · "
+                        f"Latencia: {response.latency_seconds:.2f} s"
+                    )
+                else:
+                    st.caption(
+                        "Filtro local de alcance · Modelo no invocado · "
+                        "Tokens consumidos: 0"
+                    )
                 metadata = {
                     "model": response.model_id,
                     "tools": response.tools,
                     "latency_seconds": response.latency_seconds,
+                    "model_invoked": response.model_invoked,
                 }
                 st.session_state.messages.append(
                     {"role": "assistant", "content": response.text, "metadata": metadata}
                 )
                 st.session_state.metrics.append(
                     {
-                        "modelo": response.model_id,
+                        "modelo": response.model_id if response.model_invoked else "no invocado",
                         "latencia_s": round(response.latency_seconds, 3),
                         "herramientas": tools_text,
-                        "estado": "correcto",
+                        "estado": "correcto" if response.model_invoked else "filtrado local",
                     }
                 )
 

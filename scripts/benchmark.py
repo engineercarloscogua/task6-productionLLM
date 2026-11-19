@@ -24,7 +24,7 @@ PROMPTS = [
     "¿Cuál es el tema principal de los documentos cargados?",
     "¿Qué requisitos se mencionan en los documentos?",
     "¿Qué fechas o plazos importantes aparecen?",
-    "Si hago 2 viajes diarios durante 5 días a 3000 pesos, ¿cuánto gasto?",
+    "¿Qué apoyos de transporte aparecen en los documentos y cuáles son sus requisitos?",
     "Resume las conclusiones principales e indica archivo y página.",
 ]
 

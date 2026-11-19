@@ -77,7 +77,7 @@ class KnowledgeBase:
             if scores[index] > 0
         ]
 
-    def context(self, query: str, k: int = 2) -> str:
+    def context(self, query: str, k: int = 2, max_chars: int = 6000) -> str:
         results = self.search(query, k=k)
         if not results:
             return "No se encontraron documentos relacionados con la pregunta."
@@ -90,4 +90,4 @@ class KnowledgeBase:
                 f"Contenido: {result.document.page_content}\n"
                 f"Similitud TF-IDF: {result.score:.3f}"
             )
-        return "\n\n".join(contexts)
+        return "\n\n".join(contexts)[:max_chars]

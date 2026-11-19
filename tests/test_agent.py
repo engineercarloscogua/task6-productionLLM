@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from src.agent import _tool_names, run_agent
+from src.agent import NO_DOCUMENT_RESPONSE, UNVERIFIED_RESPONSE, _tool_names, run_agent
 
 
 class FakeAgent:
@@ -39,16 +39,117 @@ def test_tool_names_only_include_current_turn() -> None:
 def test_run_agent_passes_isolated_thread_id() -> None:
     fake_agent = FakeAgent(
         [
-            message("human", "hola"),
-            message("ai", "respuesta"),
+            message("human", "pregunta"),
+            message("ai", tool_calls=[{"name": "consultar_documentos"}]),
+            message(
+                "tool",
+                "Fuente: manual.pdf, página 4\nContenido: requisitos del programa",
+            ),
+            message("ai", "Respuesta respaldada (manual.pdf, página 4)."),
         ]
     )
 
-    response = run_agent(fake_agent, "hola", "sesion-a", "modelo-prueba")
+    question = "¿Cuáles son los requisitos de Renta Joven?"
+    response = run_agent(fake_agent, question, "sesion-a", "modelo-prueba")
 
     assert fake_agent.config == {"configurable": {"thread_id": "sesion-a"}}
-    assert fake_agent.payload == {"messages": [{"role": "user", "content": "hola"}]}
-    assert response.text == "respuesta"
+    assert fake_agent.payload == {"messages": [{"role": "user", "content": question}]}
+    assert response.text == "Respuesta respaldada (manual.pdf, página 4)."
     assert response.model_id == "modelo-prueba"
-    assert response.tools == []
+    assert response.tools == ["consultar_documentos"]
     assert response.latency_seconds >= 0
+    assert response.model_invoked is True
+
+
+def test_run_agent_blocks_pqr_without_invoking_model() -> None:
+    fake_agent = FakeAgent([])
+
+    response = run_agent(
+        fake_agent,
+        "¿Puedes redactar una PQR para el programa Renta Joven?",
+        "sesion-pqr",
+        "modelo-prueba",
+    )
+
+    assert fake_agent.payload is None
+    assert response.model_invoked is False
+    assert response.tools == []
+    assert "no consumió tokens" in response.text
+
+
+def test_run_agent_hides_answer_without_document_tool() -> None:
+    fake_agent = FakeAgent(
+        [message("human", "pregunta"), message("ai", "respuesta inventada")]
+    )
+
+    response = run_agent(
+        fake_agent,
+        "¿Cuáles son los requisitos de Renta Joven?",
+        "sesion-sin-tool",
+        "modelo-prueba",
+    )
+
+    assert response.text == UNVERIFIED_RESPONSE
+
+
+def test_run_agent_hides_answer_with_false_citation() -> None:
+    fake_agent = FakeAgent(
+        [
+            message("human", "pregunta"),
+            message("ai", tool_calls=[{"name": "consultar_documentos"}]),
+            message("tool", "Fuente: manual.pdf, página 4\nContenido: texto"),
+            message("ai", "Según otro.pdf, página 99, la respuesta es inventada."),
+        ]
+    )
+
+    response = run_agent(
+        fake_agent,
+        "¿Cuáles son los requisitos de Renta Joven?",
+        "sesion-cita-falsa",
+        "modelo-prueba",
+    )
+
+    assert response.text == UNVERIFIED_RESPONSE
+
+
+def test_run_agent_hides_sensitive_output() -> None:
+    fake_agent = FakeAgent(
+        [
+            message("human", "pregunta"),
+            message("ai", tool_calls=[{"name": "consultar_documentos"}]),
+            message("tool", "Fuente: manual.pdf, página 4\nContenido: texto"),
+            message(
+                "ai",
+                "OPENROUTER_API_KEY=sk-or-v1-secreto (manual.pdf, página 4).",
+            ),
+        ]
+    )
+
+    response = run_agent(
+        fake_agent,
+        "¿Cuáles son los requisitos de Renta Joven?",
+        "sesion-secreto",
+        "modelo-prueba",
+    )
+
+    assert response.text == UNVERIFIED_RESPONSE
+
+
+def test_run_agent_uses_deterministic_message_when_retrieval_is_empty() -> None:
+    fake_agent = FakeAgent(
+        [
+            message("human", "pregunta"),
+            message("ai", tool_calls=[{"name": "consultar_documentos"}]),
+            message("tool", "No se encontraron documentos relacionados con la pregunta."),
+            message("ai", "Creo que la respuesta podría ser inventada."),
+        ]
+    )
+
+    response = run_agent(
+        fake_agent,
+        "¿Cuáles son los requisitos de Renta Joven?",
+        "sesion-sin-resultados",
+        "modelo-prueba",
+    )
+
+    assert response.text == NO_DOCUMENT_RESPONSE

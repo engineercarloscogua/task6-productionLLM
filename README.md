@@ -6,7 +6,8 @@ Inteligencia Artificial de la Universidad de La Salle.
 La aplicación transforma el prototipo de la Actividad 5 en un asistente web con:
 
 - selección dinámica de modelos gratuitos de OpenRouter compatibles con herramientas;
-- agente de LangChain con RAG, cálculo y memoria conversacional;
+- agente de LangChain limitado a consultas RAG sobre el corpus y memoria conversacional;
+- filtro local que rechaza creación de contenido, código y medios sin consumir tokens;
 - historial aislado por sesión de Streamlit;
 - recuperación de información desde documentos PDF locales con citas por página;
 - medición básica de latencia y herramientas utilizadas.
@@ -125,7 +126,7 @@ src/models.py              Catálogo de modelos gratuitos de OpenRouter
 src/tools.py               Herramientas del agente
 data/pdfs/                 Carpeta donde se cargan los documentos del RAG
 scripts/benchmark.py       Prueba controlada con diferentes cargas de trabajo
-docs/                      Resultados, limitaciones y reflexión ética
+docs/                      Resultados, seguridad, limitaciones y reflexión ética
 notebooks/Actividad6_Entrega_Colab.ipynb  Notebook reproducible de entrega
 tests/                     Pruebas deterministas sin consumo de API
 ```

@@ -2,13 +2,13 @@
 
 ## Evidencia disponible
 
-Las pruebas automatizadas verifican de forma local y sin consumo de API la extracción y fragmentación de PDF, la recuperación TF-IDF con citas por página, las dos herramientas, el filtrado del catálogo de modelos, la cadena LCEL y el paso de un `thread_id` independiente al agente. Los resultados deben actualizarse después de ejecutar `pytest`; no se incluyen valores inventados.
+Las pruebas automatizadas verifican de forma local y sin consumo de API la extracción y fragmentación de PDF, la recuperación TF-IDF con citas por página, la herramienta documental, el filtro de alcance, el catálogo de modelos, la cadena LCEL y el paso de un `thread_id` independiente al agente. El filtro rechaza PQR, desarrollo de código, creación de medios, cálculos, extracción de secretos, inyección de prompt, copia masiva y preguntas ajenas al corpus antes de invocar OpenRouter. Los fragmentos recuperados se delimitan como datos no confiables y las respuestas sin herramienta o cita verificable no se muestran.
 
 Validación local del 17 de noviembre de 2026:
 
 | Evidencia | Resultado |
 |---|---|
-| Suite determinista | 19 pruebas aprobadas |
+| Suite determinista | 41 pruebas aprobadas |
 | Compilación de módulos | Correcta |
 | Arranque de Streamlit | Correcto en puerto local de prueba |
 | Endpoint de salud | HTTP 200 y respuesta `ok` |
@@ -22,10 +22,10 @@ Validación local del 17 de noviembre de 2026:
 
 Estado: **NO MEDIDO**.
 
-La prueba de integración mínima del 16 de noviembre de 2026 sí fue ejecutada:
-el agente utilizó `calcular_transporte`, obtuvo 30.000 pesos y respondió en
-15,87 segundos con `openrouter/free`. Esta única solicitud confirma la conexión
-y el tool-calling, pero no sustituye la prueba con diferentes cargas de trabajo.
+La prueba histórica de cálculo del 16 de noviembre ya no representa el alcance
+actual. El agente ahora expone únicamente `consultar_documentos`; las solicitudes
+no documentales se resuelven con un rechazo local y cero tokens. Debe ejecutarse
+una nueva prueba de integración documental antes de cerrar la entrega.
 
 El script `scripts/benchmark.py` permite observar el comportamiento con cargas
 controladas. El notebook de entrega utiliza tres solicitudes con concurrencias 1,
