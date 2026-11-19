@@ -7,8 +7,9 @@ los programas socioeconómicos disponibles en el corpus de documentos PDF. No de
 utilizarse como asistente general, generador de contenido ni herramienta de
 desarrollo.
 
-Las solicitudes fuera de este alcance se rechazan localmente antes de invocar el
-modelo de OpenRouter. Por lo tanto, esos rechazos no consumen tokens del proveedor.
+Las solicitudes fuera de este alcance se rechazan localmente desde la interfaz y
+se vuelven a comprobar dentro del agente antes de invocar OpenRouter. Por lo tanto,
+esos rechazos no consumen tokens del proveedor.
 
 ## Flujo protegido
 
@@ -57,7 +58,8 @@ Se rechazan, entre otras, solicitudes para:
 
 ## 2. Filtro local antes del modelo
 
-`src/guardrails.py` clasifica cada entrada antes de llamar a OpenRouter. El filtro
+`src/guardrails.py` clasifica cada entrada antes de llamar a OpenRouter. La misma
+comprobación se aplica en `app.py` y en `src/agent.py` como defensa redundante. El filtro
 comprueba que la solicitud tenga intención de consulta documental y vocabulario
 relacionado con el corpus o con un seguimiento conversacional válido.
 
@@ -172,7 +174,7 @@ estado del turno sin almacenar la API key.
 
 ## 9. Pruebas automatizadas
 
-La suite contiene 41 pruebas aprobadas. Entre los escenarios de seguridad se
+La suite contiene 42 pruebas aprobadas. Entre los escenarios de seguridad se
 incluyen:
 
 - redacción de una PQR;

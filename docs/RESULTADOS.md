@@ -8,7 +8,7 @@ Validación local del 17 de noviembre de 2026:
 
 | Evidencia | Resultado |
 |---|---|
-| Suite determinista | 41 pruebas aprobadas |
+| Suite determinista | 42 pruebas aprobadas |
 | Compilación de módulos | Correcta |
 | Arranque de Streamlit | Correcto en puerto local de prueba |
 | Endpoint de salud | HTTP 200 y respuesta `ok` |

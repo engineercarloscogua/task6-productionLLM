@@ -7,6 +7,14 @@ def test_rejects_pqr_drafting() -> None:
     assert (decision.allowed, decision.reason) == (False, "content_creation")
 
 
+def test_rejects_real_pqr_prompt_from_ui() -> None:
+    decision = classify_scope(
+        "redacta una pqr para reclamar por mi petición y rechazo de solicitud "
+        "para entrar al programa de bienestar contigo"
+    )
+    assert (decision.allowed, decision.reason) == (False, "content_creation")
+
+
 def test_rejects_general_question_outside_corpus() -> None:
     decision = classify_scope("¿Quién es el presidente de Colombia?")
     assert (decision.allowed, decision.reason) == (False, "outside_source_scope")

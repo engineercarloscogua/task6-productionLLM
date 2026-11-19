@@ -7,6 +7,7 @@ import streamlit as st
 
 from src.models import ModelOption, default_model_index, fetch_free_tool_models
 from src.agent import AgentResponse, build_agent, run_agent
+from src.guardrails import SCOPE_MESSAGE, classify_scope
 from src.pdf_knowledge import PDF_DIRECTORY, pdf_knowledge_store
 
 
@@ -159,6 +160,7 @@ def initialize_session() -> None:
         "active_model": None,
         "agent": None,
         "temporary_api_key": "",
+        "document_context_active": False,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -170,6 +172,7 @@ def reset_conversation() -> None:
     st.session_state.metrics = []
     st.session_state.thread_id = str(uuid4())
     st.session_state.agent = None
+    st.session_state.document_context_active = False
 
 
 def model_label(option: ModelOption) -> str:
@@ -305,10 +308,16 @@ for message in st.session_state.messages:
         if message.get("metadata"):
             metadata = message["metadata"]
             tools = ", ".join(metadata["tools"]) or "ninguna"
-            st.caption(
-                f"Modelo: {metadata['model']} · Herramientas: {tools} · "
-                f"Latencia: {metadata['latency_seconds']:.2f} s"
-            )
+            if metadata.get("model_invoked", True):
+                st.caption(
+                    f"Modelo: {metadata['model']} · Herramientas: {tools} · "
+                    f"Latencia: {metadata['latency_seconds']:.2f} s"
+                )
+            else:
+                st.caption(
+                    "Filtro local de alcance · Modelo no invocado · "
+                    "Tokens consumidos: 0"
+                )
 
 typed_prompt = st.chat_input(
     "Pregunta sobre Renta Joven, Bienestar Contigo o la Política de Bienestar…",
@@ -327,55 +336,87 @@ if prompt and api_key:
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
+    decision = classify_scope(
+        prompt,
+        has_document_context=st.session_state.document_context_active,
+    )
+
     with st.chat_message("assistant", avatar="🌿"):
-        with st.spinner(f"Consultando {selected.name}…"):
-            try:
-                if st.session_state.agent is None:
-                    st.session_state.agent = build_agent(
-                        api_key=api_key,
+        if not decision.allowed:
+            st.markdown(SCOPE_MESSAGE)
+            st.caption(
+                "Filtro local de alcance · Modelo no invocado · "
+                "Tokens consumidos: 0"
+            )
+            metadata = {
+                "model": "no invocado",
+                "tools": [],
+                "latency_seconds": 0.0,
+                "model_invoked": False,
+                "filter_reason": decision.reason,
+            }
+            st.session_state.messages.append(
+                {"role": "assistant", "content": SCOPE_MESSAGE, "metadata": metadata}
+            )
+            st.session_state.metrics.append(
+                {
+                    "modelo": "no invocado",
+                    "latencia_s": 0.0,
+                    "herramientas": "ninguna",
+                    "estado": f"filtrado local: {decision.reason}",
+                }
+            )
+        else:
+            st.session_state.document_context_active = True
+            with st.spinner(f"Consultando {selected.name}…"):
+                try:
+                    if st.session_state.agent is None:
+                        st.session_state.agent = build_agent(
+                            api_key=api_key,
+                            model_id=selected.id,
+                        )
+                    response: AgentResponse = run_agent(
+                        agent=st.session_state.agent,
+                        message=prompt,
+                        thread_id=st.session_state.thread_id,
                         model_id=selected.id,
                     )
-                response: AgentResponse = run_agent(
-                    agent=st.session_state.agent,
-                    message=prompt,
-                    thread_id=st.session_state.thread_id,
-                    model_id=selected.id,
-                )
-            except Exception as error:
-                st.error(
-                    "La consulta no pudo completarse. Revisa la clave, el límite del modelo "
-                    f"o selecciona otro modelo. Detalle: {error}"
-                )
-            else:
-                st.markdown(response.text)
-                tools_text = ", ".join(response.tools) or "ninguna"
-                if response.model_invoked:
-                    st.caption(
-                        f"Modelo: {response.model_id} · Herramientas: {tools_text} · "
-                        f"Latencia: {response.latency_seconds:.2f} s"
+                except Exception as error:
+                    st.error(
+                        "La consulta no pudo completarse. Revisa la clave, el límite del modelo "
+                        f"o selecciona otro modelo. Detalle: {error}"
                     )
                 else:
-                    st.caption(
-                        "Filtro local de alcance · Modelo no invocado · "
-                        "Tokens consumidos: 0"
-                    )
-                metadata = {
-                    "model": response.model_id,
-                    "tools": response.tools,
-                    "latency_seconds": response.latency_seconds,
-                    "model_invoked": response.model_invoked,
-                }
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": response.text, "metadata": metadata}
-                )
-                st.session_state.metrics.append(
-                    {
-                        "modelo": response.model_id if response.model_invoked else "no invocado",
-                        "latencia_s": round(response.latency_seconds, 3),
-                        "herramientas": tools_text,
-                        "estado": "correcto" if response.model_invoked else "filtrado local",
+                    model_invoked = getattr(response, "model_invoked", True)
+                    st.markdown(response.text)
+                    tools_text = ", ".join(response.tools) or "ninguna"
+                    if model_invoked:
+                        st.caption(
+                            f"Modelo: {response.model_id} · Herramientas: {tools_text} · "
+                            f"Latencia: {response.latency_seconds:.2f} s"
+                        )
+                    else:
+                        st.caption(
+                            "Filtro local de alcance · Modelo no invocado · "
+                            "Tokens consumidos: 0"
+                        )
+                    metadata = {
+                        "model": response.model_id,
+                        "tools": response.tools,
+                        "latency_seconds": response.latency_seconds,
+                        "model_invoked": model_invoked,
                     }
-                )
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": response.text, "metadata": metadata}
+                    )
+                    st.session_state.metrics.append(
+                        {
+                            "modelo": response.model_id if model_invoked else "no invocado",
+                            "latencia_s": round(response.latency_seconds, 3),
+                            "herramientas": tools_text,
+                            "estado": "correcto" if model_invoked else "filtrado local",
+                        }
+                    )
 
 if st.session_state.metrics:
     with st.expander("Métricas de esta sesión"):
