@@ -140,17 +140,7 @@ def _document_sources(messages: list[Any]) -> list[tuple[str, str]]:
     return sources
 
 
-def _has_valid_document_support(messages: list[Any], answer: str) -> bool:
-    if "consultar_documentos" not in _tool_names(messages):
-        return False
-    tool_text = "\n".join(
-        _message_text(message)
-        for message in _current_turn_messages(messages)
-        if getattr(message, "type", None) == "tool"
-    )
-    if "No se encontraron documentos" in tool_text:
-        return False
-    sources = _document_sources(messages)
+def _has_matching_citation(answer: str, sources: list[tuple[str, str]]) -> bool:
     normalized_answer = answer.casefold()
     return any(
         filename.casefold() in normalized_answer
@@ -161,6 +151,30 @@ def _has_valid_document_support(messages: list[Any], answer: str) -> bool:
         )
         for filename, page in sources
     )
+
+
+def _contains_false_citation(answer: str, sources: list[tuple[str, str]]) -> bool:
+    """Reject explicit PDF/page citations that contradict retrieved sources."""
+    source_names = [filename.casefold() for filename, _ in sources]
+    source_pages = {page for _, page in sources}
+    cited_pdf_tokens = re.findall(r"[\wÀ-ÿ._-]+\.pdf", answer, re.IGNORECASE)
+    cited_pages = re.findall(
+        r"(?:página|pág\.?|p\.)\s*(\d+)\b",
+        answer,
+        re.IGNORECASE,
+    )
+    return any(
+        not any(token.casefold() in filename for filename in source_names)
+        for token in cited_pdf_tokens
+    ) or any(page not in source_pages for page in cited_pages)
+
+
+def _append_verified_sources(answer: str, sources: list[tuple[str, str]]) -> str:
+    unique_sources = list(dict.fromkeys(sources))[:3]
+    source_lines = "\n".join(
+        f"- `{filename}`, página {page}" for filename, page in unique_sources
+    )
+    return f"{answer.rstrip()}\n\n**Fuentes recuperadas:**\n{source_lines}"
 
 
 def run_agent(agent: Any, message: str, thread_id: str, model_id: str) -> AgentResponse:
@@ -191,12 +205,18 @@ def run_agent(agent: Any, message: str, thread_id: str, model_id: str) -> AgentR
         for item in _current_turn_messages(messages)
         if getattr(item, "type", None) == "tool"
     )
+    sources = _document_sources(messages)
     if "No se encontraron documentos" in tool_text or "datos seguros" in tool_text:
         answer = NO_DOCUMENT_RESPONSE
-    elif _SENSITIVE_OUTPUT_PATTERN.search(answer) or not _has_valid_document_support(
-        messages, answer
+    elif (
+        _SENSITIVE_OUTPUT_PATTERN.search(answer)
+        or "consultar_documentos" not in _tool_names(messages)
+        or not sources
+        or _contains_false_citation(answer, sources)
     ):
         answer = UNVERIFIED_RESPONSE
+    elif not _has_matching_citation(answer, sources):
+        answer = _append_verified_sources(answer, sources)
     return AgentResponse(
         text=answer,
         tools=_tool_names(messages),

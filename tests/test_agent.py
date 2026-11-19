@@ -112,6 +112,32 @@ def test_run_agent_hides_answer_with_false_citation() -> None:
     assert response.text == UNVERIFIED_RESPONSE
 
 
+def test_run_agent_appends_retrieved_sources_when_model_omits_citation() -> None:
+    fake_agent = FakeAgent(
+        [
+            message("human", "pregunta"),
+            message("ai", tool_calls=[{"name": "consultar_documentos"}]),
+            message(
+                "tool",
+                "Fuente: manual renta joven.pdf, página 27\nContenido: requisitos",
+            ),
+            message("ai", "Debes cumplir los requisitos indicados por el programa."),
+        ]
+    )
+
+    response = run_agent(
+        fake_agent,
+        "¿Qué requisitos debo cumplir para aplicar a Renta Joven?",
+        "sesion-sin-formato-cita",
+        "modelo-prueba",
+    )
+
+    assert "Debes cumplir los requisitos" in response.text
+    assert "manual renta joven.pdf" in response.text
+    assert "página 27" in response.text
+    assert response.text != UNVERIFIED_RESPONSE
+
+
 def test_run_agent_hides_sensitive_output() -> None:
     fake_agent = FakeAgent(
         [

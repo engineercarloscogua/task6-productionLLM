@@ -2,13 +2,13 @@
 
 ## Evidencia disponible
 
-Las pruebas automatizadas verifican de forma local y sin consumo de API la extracción y fragmentación de PDF, la recuperación TF-IDF con citas por página, la herramienta documental, el filtro de alcance, el catálogo de modelos, la cadena LCEL y el paso de un `thread_id` independiente al agente. El filtro rechaza PQR, desarrollo de código, creación de medios, cálculos, extracción de secretos, inyección de prompt, copia masiva y preguntas ajenas al corpus antes de invocar OpenRouter. Los fragmentos recuperados se delimitan como datos no confiables y las respuestas sin herramienta o cita verificable no se muestran.
+Las pruebas automatizadas verifican de forma local y sin consumo de API la extracción y fragmentación de PDF, la recuperación TF-IDF con citas por página, la herramienta documental, el filtro de alcance, el catálogo de modelos, la cadena LCEL y el paso de un `thread_id` independiente al agente. El filtro rechaza PQR, desarrollo de código, creación de medios, cálculos, extracción de secretos, inyección de prompt, copia masiva y preguntas ajenas al corpus antes de invocar OpenRouter. Los fragmentos recuperados se delimitan como datos no confiables. Si una respuesta válida omite la cita, la aplicación agrega las fuentes recuperadas automáticamente; las citas contradictorias sí se rechazan.
 
 Validación local del 17 de noviembre de 2026:
 
 | Evidencia | Resultado |
 |---|---|
-| Suite determinista | 42 pruebas aprobadas |
+| Suite determinista | 43 pruebas aprobadas |
 | Compilación de módulos | Correcta |
 | Arranque de Streamlit | Correcto en puerto local de prueba |
 | Endpoint de salud | HTTP 200 y respuesta `ok` |

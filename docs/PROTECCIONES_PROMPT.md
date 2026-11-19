@@ -130,13 +130,13 @@ Después de ejecutar el agente, la aplicación verifica que:
 
 1. se haya llamado a `consultar_documentos` durante el turno actual;
 2. exista una salida real de la herramienta;
-3. la respuesta mencione un archivo recuperado;
-4. la página citada coincida con una página recuperada;
-5. la respuesta no contenga patrones asociados con secretos.
+3. cualquier archivo o página que el modelo cite coincida con una fuente recuperada;
+4. la respuesta no contenga patrones asociados con secretos.
 
-Si alguna comprobación falla, la respuesta del modelo no se muestra. En su lugar,
-se presenta un mensaje indicando que no fue posible producir una respuesta con
-respaldo verificable.
+Si el modelo omite la cita, la aplicación conserva la respuesta y agrega al final
+una lista determinista de hasta tres fuentes realmente recuperadas. Si el modelo
+incluye una cita contradictoria, no usa la herramienta o expone un posible secreto,
+la respuesta no se muestra y se presenta un mensaje seguro.
 
 Cuando la recuperación no encuentra información, se utiliza un mensaje
 determinista. Esto evita que el modelo complete la respuesta mediante su
@@ -174,7 +174,7 @@ estado del turno sin almacenar la API key.
 
 ## 9. Pruebas automatizadas
 
-La suite contiene 42 pruebas aprobadas. Entre los escenarios de seguridad se
+La suite contiene 43 pruebas aprobadas. Entre los escenarios de seguridad se
 incluyen:
 
 - redacción de una PQR;
@@ -189,6 +189,7 @@ incluyen:
 - inyección indirecta contenida en un documento;
 - respuestas sin uso de la herramienta;
 - citas que no corresponden con la fuente recuperada;
+- respuestas válidas sin formato de cita, a las que se agregan fuentes reales;
 - posibles secretos incluidos en la respuesta;
 - recuperación sin resultados.
 
