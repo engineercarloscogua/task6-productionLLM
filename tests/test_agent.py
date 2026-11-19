@@ -54,7 +54,8 @@ def test_run_agent_passes_isolated_thread_id() -> None:
 
     assert fake_agent.config == {"configurable": {"thread_id": "sesion-a"}}
     assert fake_agent.payload == {"messages": [{"role": "user", "content": question}]}
-    assert response.text == "Respuesta respaldada (manual.pdf, página 4)."
+    assert "Respuesta respaldada." in response.text
+    assert "`manual.pdf`, página 4" in response.text
     assert response.model_id == "modelo-prueba"
     assert response.tools == ["consultar_documentos"]
     assert response.latency_seconds >= 0
@@ -92,7 +93,7 @@ def test_run_agent_hides_answer_without_document_tool() -> None:
     assert response.text == UNVERIFIED_RESPONSE
 
 
-def test_run_agent_hides_answer_with_false_citation() -> None:
+def test_run_agent_replaces_model_citation_with_retrieved_source() -> None:
     fake_agent = FakeAgent(
         [
             message("human", "pregunta"),
@@ -109,7 +110,10 @@ def test_run_agent_hides_answer_with_false_citation() -> None:
         "modelo-prueba",
     )
 
-    assert response.text == UNVERIFIED_RESPONSE
+    assert "otro.pdf" not in response.text
+    assert "página 99" not in response.text
+    assert "manual.pdf" in response.text
+    assert "página 4" in response.text
 
 
 def test_run_agent_appends_retrieved_sources_when_model_omits_citation() -> None:

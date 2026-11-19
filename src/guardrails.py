@@ -55,7 +55,9 @@ _CREATION_PATTERN = re.compile(
 _RETRIEVAL_PATTERN = re.compile(
     r"\b(?:que|cual(?:es)?|como|cuando|donde|quien(?:es)?|por que|cuanto|"
     r"informacion|requisito(?:s)?|condicion(?:es)?|beneficio(?:s)?|"
-    r"explica(?:me)?|resume(?:me)?|consulta|busca|dime)\b"
+    r"explica(?:me)?|resume(?:me)?|consulta|busca|dime|puedo|podria|aplicar|"
+    r"acceder|pertenecer|postular(?:me)?|elegible|compatibles?|simultaneamente|"
+    r"ambos)\b"
 )
 _SOURCE_SCOPE_PATTERN = re.compile(
     r"\b(?:renta joven|bienestar(?: universitario| contigo)?|programa(?:s)?|"

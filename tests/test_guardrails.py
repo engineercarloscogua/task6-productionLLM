@@ -34,6 +34,10 @@ def test_accepts_document_question() -> None:
     assert classify_scope("¿Cuáles son los requisitos de Renta Joven?").allowed
 
 
+def test_accepts_eligibility_comparison_question() -> None:
+    assert classify_scope("¿Puedo aplicar a los 2 programas?").allowed
+
+
 def test_accepts_short_follow_up_after_document_question() -> None:
     assert classify_scope("¿Y cuándo se puede renovar?", has_document_context=True).allowed
 
