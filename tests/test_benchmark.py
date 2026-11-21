@@ -1,4 +1,7 @@
-from scripts.benchmark import Sample, percentile, summarize
+from types import SimpleNamespace
+
+import scripts.benchmark as benchmark
+from scripts.benchmark import Sample, execute_request, percentile, summarize
 
 
 def test_percentile_and_summary_use_only_successful_latencies() -> None:
@@ -20,3 +23,39 @@ def test_percentile_and_summary_use_only_successful_latencies() -> None:
 
 def test_percentile_returns_none_without_measurements() -> None:
     assert percentile([], 0.95) is None
+
+
+def test_execute_request_does_not_count_local_filter_as_success(monkeypatch) -> None:
+    monkeypatch.setattr(benchmark, "build_agent", lambda **kwargs: object())
+    monkeypatch.setattr(
+        benchmark,
+        "run_agent",
+        lambda *args, **kwargs: SimpleNamespace(
+            model_invoked=False,
+            latency_seconds=0.01,
+            tools=[],
+        ),
+    )
+
+    sample = execute_request("key", "model", concurrency=1, request=1)
+
+    assert sample.success is False
+    assert sample.error_type == "FilteredRequest"
+
+
+def test_execute_request_requires_document_tool(monkeypatch) -> None:
+    monkeypatch.setattr(benchmark, "build_agent", lambda **kwargs: object())
+    monkeypatch.setattr(
+        benchmark,
+        "run_agent",
+        lambda *args, **kwargs: SimpleNamespace(
+            model_invoked=True,
+            latency_seconds=0.02,
+            tools=[],
+        ),
+    )
+
+    sample = execute_request("key", "model", concurrency=1, request=1)
+
+    assert sample.success is False
+    assert sample.error_type == "RequiredToolMissing"

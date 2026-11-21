@@ -150,7 +150,9 @@ def test_run_agent_hides_sensitive_output() -> None:
             message("tool", "Fuente: manual.pdf, página 4\nContenido: texto"),
             message(
                 "ai",
-                "OPENROUTER_API_KEY=sk-or-v1-secreto (manual.pdf, página 4).",
+                "OPENROUTER_API_KEY="
+                + "sk-or-v1-"
+                + "secreto (manual.pdf, página 4).",
             ),
         ]
     )

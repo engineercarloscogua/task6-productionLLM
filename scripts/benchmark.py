@@ -21,11 +21,11 @@ from src.agent import build_agent, run_agent
 
 
 PROMPTS = [
-    "¿Cuál es el tema principal de los documentos cargados?",
-    "¿Qué requisitos se mencionan en los documentos?",
-    "¿Qué fechas o plazos importantes aparecen?",
-    "¿Qué apoyos de transporte aparecen en los documentos y cuáles son sus requisitos?",
-    "Resume las conclusiones principales e indica archivo y página.",
+    "¿Qué es el programa Renta Joven según los documentos?",
+    "¿Cuáles son los requisitos para acceder a Renta Joven?",
+    "¿Qué fechas o plazos aparecen en la convocatoria de Bienestar Contigo?",
+    "¿Qué apoyos de transporte ofrecen los programas de bienestar universitario?",
+    "¿Qué beneficios para estudiantes describe la Política de Bienestar Universitario?",
 ]
 
 
@@ -63,6 +63,26 @@ def execute_request(api_key: str, model_id: str, concurrency: int, request: int)
             tools="",
             error_type=type(error).__name__,
             error_message=str(error)[:500],
+        )
+    if not response.model_invoked:
+        return Sample(
+            concurrency=concurrency,
+            request=request,
+            success=False,
+            latency_seconds=response.latency_seconds,
+            tools="",
+            error_type="FilteredRequest",
+            error_message="La consulta fue resuelta por el filtro local sin invocar el modelo.",
+        )
+    if "consultar_documentos" not in response.tools:
+        return Sample(
+            concurrency=concurrency,
+            request=request,
+            success=False,
+            latency_seconds=response.latency_seconds,
+            tools=",".join(response.tools),
+            error_type="RequiredToolMissing",
+            error_message="El agente no utilizó consultar_documentos.",
         )
     return Sample(
         concurrency=concurrency,

@@ -1,0 +1,40 @@
+{
+  "measured_at": "2026-11-20T23:21:57-05:00",
+  "timezone": "America/Bogota",
+  "model": "nvidia/nemotron-3.5-lightning:free",
+  "requests_per_level": 3,
+  "validation": "Cada éxito invocó el modelo y utilizó consultar_documentos.",
+  "groups": [
+    {
+      "concurrency": 1,
+      "requests": 3,
+      "successes": 3,
+      "failures": 0,
+      "success_rate": 1.0,
+      "latency_mean_seconds": 12.606,
+      "latency_p50_seconds": 10.130,
+      "latency_p95_seconds": 25.343
+    },
+    {
+      "concurrency": 2,
+      "requests": 3,
+      "successes": 3,
+      "failures": 0,
+      "success_rate": 1.0,
+      "latency_mean_seconds": 4.747,
+      "latency_p50_seconds": 5.746,
+      "latency_p95_seconds": 5.823
+    },
+    {
+      "concurrency": 5,
+      "requests": 3,
+      "successes": 3,
+      "failures": 0,
+      "success_rate": 1.0,
+      "latency_mean_seconds": 6.962,
+      "latency_p50_seconds": 8.502,
+      "latency_p95_seconds": 9.712
+    }
+  ],
+  "interpretation": "La muestra tuvo 100 % de éxito. La concurrencia 2 fue la más rápida en promedio; la carga 5 aumentó la latencia frente a 2, pero permaneció por debajo de la línea base secuencial. La muestra es pequeña y no demuestra capacidad sostenida de producción."
+}

@@ -119,7 +119,7 @@ es real. Las decisiones importantes deben verificarse directamente en el PDF.
 ```text
 app.py                     Interfaz Streamlit
 src/agent.py               Agente, memoria y observabilidad
-src/chains.py              Cadena LCEL explícita para la evidencia académica
+src/chains.py              Cadenas LCEL de definición y respuesta RAG documental
 src/knowledge.py           Índice y recuperación TF-IDF local
 src/pdf_knowledge.py       Extracción, fragmentación y recarga de PDF
 src/models.py              Catálogo de modelos gratuitos de OpenRouter
@@ -133,6 +133,8 @@ tests/                     Pruebas deterministas sin consumo de API
 
 ## Estado del despliegue
 
-La aplicación y sus dependencias están validadas localmente en un entorno limpio
-con Python 3.12. El despliegue público y la prueba de cargas deben registrarse en
-el notebook cuando se verifiquen desde Streamlit Community Cloud.
+La aplicación y sus dependencias están validadas localmente con Python 3.12 y se
+encuentra publicada en https://fomento-socioeconomico.streamlit.app/. La medición
+del 20 de noviembre de 2026 registró 9/9 consultas correctas con concurrencias 1,
+2 y 5; sus resultados e interpretación se conservan en `docs/RESULTADOS.md` y en
+el notebook de entrega.
