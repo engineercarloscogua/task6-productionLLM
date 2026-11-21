@@ -5,6 +5,7 @@ from src.agent import (
     UNVERIFIED_RESPONSE,
     _contextualize_question,
     _tool_names,
+    build_agent,
     run_agent,
 )
 
@@ -63,6 +64,39 @@ def test_ambiguous_first_question_searches_both_programs() -> None:
     )
 
     assert "Renta Joven y Bien-Estar Contigo" in contextualized
+
+
+def test_build_agent_uses_openai_responses_api(monkeypatch) -> None:
+    captured = {}
+
+    class FakeOpenAIModel:
+        def __init__(self, **kwargs) -> None:
+            captured.update(kwargs)
+
+    monkeypatch.setattr("src.agent.ChatOpenAI", FakeOpenAIModel)
+    monkeypatch.setattr(
+        "src.agent.create_agent",
+        lambda **kwargs: kwargs,
+    )
+
+    result = build_agent(
+        api_key="clave-openai",
+        model_id="gpt-6-luna",
+        provider="openai",
+    )
+
+    assert captured["model"] == "gpt-6-luna"
+    assert captured["use_responses_api"] is True
+    assert captured["store"] is False
+    assert captured["max_retries"] == 0
+    assert result["model"].__class__ is FakeOpenAIModel
+
+
+def test_build_agent_rejects_unknown_provider() -> None:
+    import pytest
+
+    with pytest.raises(ValueError, match="Proveedor no compatible"):
+        build_agent("clave", "modelo", provider="desconocido")
 
 
 def test_run_agent_passes_isolated_thread_id() -> None:

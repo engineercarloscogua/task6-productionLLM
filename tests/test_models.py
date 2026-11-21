@@ -1,7 +1,9 @@
 from src.models import (
     DEFAULT_MODEL_ID,
+    DEFAULT_OPENAI_MODEL_ID,
     ModelOption,
     default_model_index,
+    openai_tool_models,
     parse_free_tool_models,
 )
 
@@ -50,3 +52,14 @@ def test_nemotron_is_selected_by_default_when_available() -> None:
 
 def test_default_model_falls_back_to_first_catalog_option() -> None:
     assert default_model_index([ModelOption.free_router()]) == 0
+
+
+def test_openai_catalog_defaults_to_cost_sensitive_tool_model() -> None:
+    options = openai_tool_models()
+
+    assert options[0].id == DEFAULT_OPENAI_MODEL_ID == "gpt-6-luna"
+    assert {option.id for option in options} == {
+        "gpt-6-luna",
+        "gpt-6.2-sol",
+        "gpt-6.2-astra",
+    }

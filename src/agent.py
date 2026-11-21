@@ -8,6 +8,7 @@ from time import perf_counter
 from typing import Any
 
 from langchain.agents import create_agent
+from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
 from src.openrouter_model import OpenRouterChatModel
@@ -46,7 +47,8 @@ NO_DOCUMENT_RESPONSE = (
     "responder esa pregunta."
 )
 _SENSITIVE_OUTPUT_PATTERN = re.compile(
-    r"(?:OPENROUTER_API_KEY|secrets?\.toml|sk-or-v1-[A-Za-z0-9_-]+)",
+    r"(?:OPENROUTER_API_KEY|OPENAI_API_KEY|secrets?\.toml|"
+    r"sk-or-v1-[A-Za-z0-9_-]+|sk-(?:proj-)?[A-Za-z0-9_-]{20,})",
     re.IGNORECASE,
 )
 
@@ -97,17 +99,34 @@ def _contextualize_question(message: str, thread_id: str) -> str:
     return f"{message}\n\nPrograma de referencia: {program_context}."
 
 
-def build_agent(api_key: str, model_id: str) -> Any:
-    """Create an OpenRouter-backed LangChain agent with short-term memory."""
+def build_agent(
+    api_key: str,
+    model_id: str,
+    provider: str = "openrouter",
+) -> Any:
+    """Create a provider-backed LangChain agent with short-term memory."""
     if not api_key.strip():
-        raise ValueError("OPENROUTER_API_KEY es obligatoria.")
-    model = OpenRouterChatModel(
-        model_name=model_id,
-        api_key=api_key,
-        temperature=0,
-        max_retries=2,
-        timeout_seconds=60,
-    )
+        key_name = "OPENAI_API_KEY" if provider == "openai" else "OPENROUTER_API_KEY"
+        raise ValueError(f"{key_name} es obligatoria.")
+    if provider == "openai":
+        model = ChatOpenAI(
+            model=model_id,
+            api_key=api_key,
+            use_responses_api=True,
+            store=False,
+            max_retries=0,
+            timeout=60,
+        )
+    elif provider == "openrouter":
+        model = OpenRouterChatModel(
+            model_name=model_id,
+            api_key=api_key,
+            temperature=0,
+            max_retries=2,
+            timeout_seconds=60,
+        )
+    else:
+        raise ValueError(f"Proveedor no compatible: {provider}")
     return create_agent(
         model=model,
         tools=TOOLS,

@@ -15,6 +15,7 @@ import requests
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 REQUEST_TIMEOUT_SECONDS = 15
 DEFAULT_MODEL_ID = "nvidia/nemotron-3.5-lightning:free"
+DEFAULT_OPENAI_MODEL_ID = "gpt-6-luna"
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +74,27 @@ def fetch_free_tool_models() -> list[ModelOption]:
     )
     response.raise_for_status()
     return parse_free_tool_models(response.json())
+
+
+def openai_tool_models() -> list[ModelOption]:
+    """Return a curated set of current OpenAI models with function tools."""
+    return [
+        ModelOption(
+            id="gpt-6-luna",
+            name="GPT-6 Luna · menor costo",
+            context_length=1_050_000,
+        ),
+        ModelOption(
+            id="gpt-6.2-sol",
+            name="GPT-6.2 Sol · uso general",
+            context_length=1_050_000,
+        ),
+        ModelOption(
+            id="gpt-6.2-astra",
+            name="GPT-6.2 Astra · máxima capacidad",
+            context_length=1_050_000,
+        ),
+    ]
 
 
 def default_model_index(options: list[ModelOption]) -> int:

@@ -15,7 +15,7 @@ La aplicación transforma el prototipo de la Actividad 5 en un asistente web con
 ## Requisitos
 
 - Python 3.11 o superior.
-- Una API key de OpenRouter.
+- Una API key de OpenRouter y, opcionalmente, una API key de pago de OpenAI.
 
 Los modelos terminados en `:free` no tienen costo por tokens, pero OpenRouter
 aplica límites de solicitudes y su disponibilidad puede cambiar.
@@ -34,6 +34,7 @@ aplica límites de solicitudes y su disponibilidad puede cambiar.
 
    ```toml
    OPENROUTER_API_KEY = "tu_clave"
+   OPENAI_API_KEY = "tu_clave_de_openai_opcional"
    ```
 
    El archivo real está ignorado por Git y no debe publicarse.
@@ -67,6 +68,11 @@ aplica límites de solicitudes y su disponibilidad puede cambiar.
    ```powershell
    uv run streamlit run app.py
    ```
+
+   En la barra lateral puedes elegir **OpenRouter** para usar modelos gratuitos o
+   **OpenAI** para usar la cuenta de pago. El cambio siempre es manual para evitar
+   cargos inesperados. GPT-6 Luna es la opción de OpenAI seleccionada por defecto
+   por su menor costo relativo.
 
 6. En la barra lateral, confirma que aparezcan los archivos y pulsa **Recargar
    documentos** después de cualquier cambio.
