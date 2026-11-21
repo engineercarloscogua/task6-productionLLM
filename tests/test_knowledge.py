@@ -37,3 +37,21 @@ def test_context_contains_source_and_score() -> None:
 
 def test_empty_knowledge_base_has_no_results() -> None:
     assert KnowledgeBase([]).search("cualquier pregunta") == []
+
+
+def test_search_normalizes_bienestar_program_name_and_common_typo() -> None:
+    documents = [
+        Document(
+            page_content="El Programa Bien-Estar Contigo ofrece apoyo de alimentacion.",
+            metadata={"fuente": "bienestar.pdf", "pagina": 1},
+        ),
+        Document(
+            page_content="Renta Joven promueve la permanencia en educacion superior.",
+            metadata={"fuente": "renta-joven.pdf", "pagina": 2},
+        ),
+    ]
+    knowledge = KnowledgeBase(documents)
+
+    for query in ("Que es Bienestar Contigo?", "bienestar contgio"):
+        results = knowledge.search(query)
+        assert results[0].document.metadata["fuente"] == "bienestar.pdf"

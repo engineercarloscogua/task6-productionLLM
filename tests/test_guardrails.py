@@ -34,6 +34,19 @@ def test_accepts_document_question() -> None:
     assert classify_scope("¿Cuáles son los requisitos de Renta Joven?").allowed
 
 
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "Bienestar Contigo",
+        "Bien-Estar Contigo",
+        "pregunto por bienestar contigo",
+        "bienestar contgio",
+    ],
+)
+def test_accepts_direct_program_lookup(prompt: str) -> None:
+    assert classify_scope(prompt).allowed
+
+
 def test_accepts_eligibility_comparison_question() -> None:
     assert classify_scope("¿Puedo aplicar a los 2 programas?").allowed
 

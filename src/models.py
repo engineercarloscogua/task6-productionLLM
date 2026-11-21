@@ -4,6 +4,11 @@ import ssl  # Load Python's TLS runtime before native numerical dependencies on 
 from dataclasses import dataclass
 from typing import Any
 
+from src.tls import configure_system_trust_store
+
+
+configure_system_trust_store()
+
 import requests
 
 

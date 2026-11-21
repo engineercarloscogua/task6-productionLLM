@@ -9,6 +9,19 @@ from dataclasses import dataclass
 from langchain_core.documents import Document
 
 
+_SPANISH_STOPWORDS = {
+    "a", "al", "como", "con", "cual", "cuales", "cuando", "de", "del",
+    "donde", "e", "el", "en", "es", "la", "las", "lo", "los", "o",
+    "para", "por", "que", "quien", "quienes", "se", "sin", "son", "su",
+    "sus", "u", "un", "una", "unas", "unos", "y",
+}
+_COMMON_QUERY_TYPOS = {
+    "beinestar": "bienestar",
+    "bienstar": "bienestar",
+    "contgio": "contigo",
+}
+
+
 @dataclass(frozen=True, slots=True)
 class SearchResult:
     document: Document
@@ -35,7 +48,12 @@ class KnowledgeBase:
     def _terms(text: str) -> list[str]:
         normalized = unicodedata.normalize("NFKD", text.casefold())
         ascii_text = "".join(char for char in normalized if not unicodedata.combining(char))
-        words = re.findall(r"[a-z0-9]+", ascii_text)
+        ascii_text = re.sub(r"\bbien[-\s]*estar\b", "bienestar", ascii_text)
+        words = [
+            _COMMON_QUERY_TYPOS.get(word, word)
+            for word in re.findall(r"[a-z0-9]+", ascii_text)
+            if word not in _SPANISH_STOPWORDS
+        ]
         bigrams = [f"{left}_{right}" for left, right in zip(words, words[1:])]
         return [*words, *bigrams]
 

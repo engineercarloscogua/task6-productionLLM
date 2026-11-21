@@ -60,12 +60,22 @@ _RETRIEVAL_PATTERN = re.compile(
     r"ambos)\b"
 )
 _SOURCE_SCOPE_PATTERN = re.compile(
-    r"\b(?:renta joven|bienestar(?: universitario| contigo)?|programa(?:s)?|"
+    r"\b(?:renta joven|bien[- ]?estar(?: universitario| contigo| contgio)?|programa(?:s)?|"
     r"estudiante(?:s)?|joven(?:es)?|beneficiari[oa]s?|matricula|educacion superior|"
     r"permanencia|transporte|computador(?:es)?|prestamo|convocatoria|inscripcion|"
     r"institucion(?:es)?|universidad(?:es)?|pago(?:s)?|ciclo(?:s)?|incentivo(?:s)?|"
     r"corresponsabilidad(?:es)?|prosperidad social|documento(?:s)?|archivo(?:s)?|"
-    r"pagina(?:s)?|pdf|corpus)\b"
+    r"pagina(?:s)?|pdf|corpus|sisben|cuenta bancaria|bancari[oa]s?|dinero|pagar|"
+    r"paguen|nota(?:s)?|materia(?:s)?|semestre|carrera|voluntariado|curso(?:s)?|"
+    r"capacitacion(?:es)?|alimentacion|victima(?:s)?|conflicto armado|indigena(?:s)?|"
+    r"promedio|credito(?:s)?|carne estudiantil|bono(?:s)?|supermercado(?:s)?|"
+    r"seleccionad[oa]s?|cupo(?:s)?|reclamacion|oficina|calificacion(?:es)?|"
+    r"actividad(?:es)?|apoyo(?:s)?|beneficio(?:s)?)\b"
+)
+_DIRECT_SOURCE_LOOKUP_PATTERN = re.compile(
+    r"^(?:(?:informacion|consulta|pregunto|pregunta) (?:sobre|por|de) )?"
+    r"(?:el )?(?:programa )?(?:renta joven|bien[- ]?estar (?:contigo|contgio)|"
+    r"politica (?:integral )?de bien[- ]?estar universitario)$"
 )
 _FORBIDDEN_CAPABILITY_PATTERN = re.compile(
     r"\b(?:codigo|codificar|programacion|programar|desarrollo (?:web|de software)|"
@@ -149,7 +159,13 @@ def classify_scope(message: str, has_document_context: bool = False) -> ScopeDec
         return ScopeDecision(False, "content_creation")
     if _CALCULATION_PATTERN.search(normalized):
         return ScopeDecision(False, "calculation")
-    if not _RETRIEVAL_PATTERN.search(normalized):
+    direct_source_lookup = bool(
+        _DIRECT_SOURCE_LOOKUP_PATTERN.fullmatch(normalized.strip(" ?.!,;:"))
+    )
+    if direct_source_lookup:
+        return ScopeDecision(True, "document_lookup")
+    explicit_question = "?" in normalized or "¿" in message
+    if not _RETRIEVAL_PATTERN.search(normalized) and not explicit_question:
         return ScopeDecision(False, "not_a_knowledge_question")
     short_follow_up = (
         has_document_context

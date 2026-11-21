@@ -2,8 +2,15 @@ from __future__ import annotations
 
 import json
 import ssl  # Keep the standard TLS runtime loaded before optional native packages.
+from datetime import datetime, timezone
 from time import sleep
 from typing import Any, Sequence
+from zoneinfo import ZoneInfo
+
+from src.tls import configure_system_trust_store
+
+
+configure_system_trust_store()
 
 import requests
 from langchain_core.callbacks import CallbackManagerForLLMRun
@@ -16,6 +23,43 @@ from pydantic import Field, SecretStr
 
 
 OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+
+class OpenRouterRateLimitError(RuntimeError):
+    """A user-facing error for exhausted OpenRouter request quotas."""
+
+
+def _rate_limit_message(response: Any) -> str:
+    reset_value = response.headers.get("X-RateLimit-Reset")
+    try:
+        error_headers = (
+            response.json()
+            .get("error", {})
+            .get("metadata", {})
+            .get("headers", {})
+        )
+        reset_value = reset_value or error_headers.get("X-RateLimit-Reset")
+    except (ValueError, AttributeError):
+        pass
+
+    reset_text = "cuando OpenRouter restablezca la cuota diaria"
+    if reset_value:
+        try:
+            timestamp = int(reset_value)
+            if timestamp > 10_000_000_000:
+                timestamp /= 1000
+            reset_at = datetime.fromtimestamp(timestamp, timezone.utc).astimezone(
+                ZoneInfo("America/Bogota")
+            )
+            reset_text = reset_at.strftime("el %d/%m/%Y a las %H:%M, hora de Colombia")
+        except (TypeError, ValueError, OSError, OverflowError):
+            pass
+
+    return (
+        "Se agotó la cuota diaria de modelos gratuitos de esta cuenta de "
+        f"OpenRouter. Podrás volver a consultar {reset_text}. Cambiar a otro "
+        "modelo gratuito no evita este límite de la cuenta."
+    )
 
 
 class OpenRouterChatModel(BaseChatModel):
@@ -89,6 +133,8 @@ class OpenRouterChatModel(BaseChatModel):
                 json=payload,
                 timeout=self.timeout_seconds,
             )
+            if response.status_code == 429:
+                raise OpenRouterRateLimitError(_rate_limit_message(response))
             if response.status_code != 429 and response.status_code < 500:
                 response.raise_for_status()
                 return response.json()

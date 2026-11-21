@@ -8,6 +8,7 @@ import streamlit as st
 from src.models import ModelOption, default_model_index, fetch_free_tool_models
 from src.agent import AgentResponse, build_agent, run_agent
 from src.guardrails import SCOPE_MESSAGE, classify_scope
+from src.openrouter_model import OpenRouterRateLimitError
 from src.pdf_knowledge import PDF_DIRECTORY, pdf_knowledge_store
 
 
@@ -380,6 +381,31 @@ if prompt and api_key:
                         message=prompt,
                         thread_id=st.session_state.thread_id,
                         model_id=selected.id,
+                    )
+                except OpenRouterRateLimitError as error:
+                    limit_message = f"**Cuota diaria de OpenRouter agotada**\n\n{error}"
+                    st.warning(limit_message)
+                    metadata = {
+                        "model": selected.id,
+                        "tools": ["consultar_documentos"],
+                        "latency_seconds": 0.0,
+                        "model_invoked": True,
+                        "provider_status": "rate_limit",
+                    }
+                    st.session_state.messages.append(
+                        {
+                            "role": "assistant",
+                            "content": limit_message,
+                            "metadata": metadata,
+                        }
+                    )
+                    st.session_state.metrics.append(
+                        {
+                            "modelo": selected.id,
+                            "latencia_s": 0.0,
+                            "herramientas": "consultar_documentos",
+                            "estado": "cuota diaria agotada",
+                        }
                     )
                 except Exception as error:
                     st.error(

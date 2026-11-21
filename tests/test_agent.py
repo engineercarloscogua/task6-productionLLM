@@ -1,6 +1,12 @@
 from types import SimpleNamespace
 
-from src.agent import NO_DOCUMENT_RESPONSE, UNVERIFIED_RESPONSE, _tool_names, run_agent
+from src.agent import (
+    NO_DOCUMENT_RESPONSE,
+    UNVERIFIED_RESPONSE,
+    _contextualize_question,
+    _tool_names,
+    run_agent,
+)
 
 
 class FakeAgent:
@@ -34,6 +40,29 @@ def test_tool_names_only_include_current_turn() -> None:
     ]
 
     assert _tool_names(messages) == ["calcular_transporte"]
+
+
+def test_program_context_is_preserved_for_ambiguous_follow_up() -> None:
+    thread_id = "sesion-contexto-programa"
+
+    assert _contextualize_question("¿Qué es Bien-Estar Contigo?", thread_id) == (
+        "¿Qué es Bien-Estar Contigo?"
+    )
+    contextualized = _contextualize_question(
+        "¿Necesito tener Sisbén para participar?",
+        thread_id,
+    )
+
+    assert "Programa de referencia: Bien-Estar Contigo." in contextualized
+
+
+def test_ambiguous_first_question_searches_both_programs() -> None:
+    contextualized = _contextualize_question(
+        "¿Necesito tener Sisbén para participar?",
+        "sesion-sin-contexto-previo",
+    )
+
+    assert "Renta Joven y Bien-Estar Contigo" in contextualized
 
 
 def test_run_agent_passes_isolated_thread_id() -> None:
